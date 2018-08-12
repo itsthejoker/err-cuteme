@@ -15,6 +15,9 @@ class Cute(BotPlugin):
 
     @botcmd
     def cute(self, msg, args):
+        """
+        !cute {dog, cat, pug}, or just !cute to get a random picture
+        """
         if args:
             self.args = args.split()
 
