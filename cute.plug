@@ -1,0 +1,9 @@
+[Core]
+Name = Cute
+Module = cute
+
+[Documentation]
+Description = Porting hubot's cute animals to errbot.
+
+[Python]
+Version = 2+
