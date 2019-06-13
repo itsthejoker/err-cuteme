@@ -1,55 +1,52 @@
-from errbot import BotPlugin, botcmd
 import random
+
 import requests
-from xmljson import badgerfish as bf
-from json import dumps
-from json import loads
-from xml.etree.ElementTree import fromstring
-from addict import Dict
+from errbot import BotPlugin, botcmd
 
 
 class Cute(BotPlugin):
-    cat_api = "http://thecatapi.com/api/images/get?format=xml&results_per_page={}"
+    cat_api = "http://thecatapi.com/api/images/get?format=json&results_per_page={}"
     pug_api = "http://pugme.herokuapp.com/bomb?count={}"
-    dog_api = "https://api.thedogapi.co.uk/v2/dog.php?limit={}"
+    fox_api = "https://randomfox.ca/floof/"
+    error_img = "https://www.pinclipart.com/picdir/middle/168-1688957_powerpuff-girls-cry-bubbles-clipart.png"
 
     @botcmd
     def cute(self, msg, args):
         """
-        !cute {dog, cat, pug}, or just !cute to get a random picture
+        !cute {fox, cat, pug}, or just !cute to get a random picture
         """
         if args:
             self.args = args.split()
 
         if args:
             if self.args[0] == 'cat':
-                return self.get_cat()
+                return self.get_pic(self.get_cat)
             elif self.args[0] == 'pug':
-                return self.get_pug()
-            elif self.args[0] == 'dog':
-                return self.get_dog()
+                return self.get_pic(self.get_pug)
+            elif self.args[0] == 'fox':
+                return self.get_pic(self.get_fox)
 
         # if we get here, we either didn't have args or we didn't pass the
         # right args. Just pick an animal at random.
-        options = [self.get_cat, self.get_pug, self.get_dog]
+        options = [self.get_cat, self.get_pug, self.get_fox]
         animal = random.choice(options)
-        return animal()
+        return self.get_pic(animal)
 
-    def get_cat(self):
+    def get_pic(self, func, extra_args=None):
+        try:
+            return func(extra_args)
+        except:
+            return (
+                f"Something went horribly wrong and I don't know what!"
+                f"\n\n{self.error_img}"
+            )
+
+    def get_cat(self, *args):
         # TODO: add picture bomb functionality
-        count = 1
-        result = requests.get(self.cat_api.format(count))
-        # is probably a lot more painful than it needs to be, but xml sucks
-        json_data = Dict(loads(dumps(bf.data(fromstring(result.content)))))
-        return json_data.response.data.images.image.url['$']
+        return requests.get(self.cat_api.format(1)).json()[0]['url']
 
+    def get_pug(self, *args):
+        return requests.get(self.pug_api.format(1)).json()['pugs'][0]
 
-    def get_pug(self):
-        result = requests.get(self.pug_api)
-        return result.json()['pugs'][0]
-
-    def get_dog(self):
-        count = 1
-        result = requests.get(self.dog_api.format(count))
-        json_data = Dict(result.json())
-        return json_data.data[0].url
+    def get_fox(self, *args):
+        return requests.get(self.fox_api).json().get('image')
